@@ -1,0 +1,261 @@
+#!/bin/bash
+
+function cleanup() {
+  pushd compose
+  docker-compose rm -fs 
+  popd
+  # Purge the TF State
+  rm -rf ./terraform/.terraform
+  rm -rf ./terraform/.terraform.lock.hcl
+  exit 0
+}
+
+trap cleanup SIGKILL SIGINT
+
+function init_compose() {
+  pushd compose/
+  docker-compose up -d
+
+  popd
+}
+
+function init_terraform() {
+  pushd terraform
+  terraform init
+  terraform apply -auto-approve
+  popd
+}
+
+# Test with login to Boundary after provisioning
+function login() {
+  boundary authenticate password -login-name jeff -password foofoofoo -auth-method-id $(primary_org_ampw)
+}
+
+function primary_org_id() {
+  strip $(boundary scopes list -keyring-type=none -format json | jq  -c '.items[] | select(.name | contains("primary")) | .id')
+}
+
+function primary_org_ampw() {
+  strip $(boundary auth-methods list -keyring-type=none -scope-id $(primary_org_id) -format json | jq -c '.items[].id') 
+}
+
+function strip() {
+  echo "$1" | tr -d '"'
+}
+
+for arg in "$@"
+do
+    case $arg in
+        all)
+        init_compose
+
+        echo "pausing for Vault init..."
+        sleep 5
+
+        # export VAULT_ROOT_TOKEN="root"
+        # export VAULT_TOKEN=$VAULT_ROOT_TOKEN
+        export VAULT_ADDR="http://127.0.0.1:8200"
+        export VAULT_SKIP_VERIFY=true
+        # vault login root
+
+        echo "Initializing Vault"
+        vault operator init | tee /tmp/vault.txt
+        # sudo cat /tmp/vault.txt > /tmp/vault.txt
+
+        echo "Sourcing Vault"
+        export ROOT_TOKEN=$(cat /tmp/vault.txt | grep '^Initial' | awk '{print $4}')
+        export UNSEAL_1=$(cat /tmp/vault.txt | grep '^Unseal Key 1' | awk '{print $4}')
+        export UNSEAL_2=$(cat /tmp/vault.txt | grep '^Unseal Key 2' | awk '{print $4}')
+        export UNSEAL_3=$(cat /tmp/vault.txt | grep '^Unseal Key 3' | awk '{print $4}')
+
+        echo "Unsealing Vault"
+        vault operator unseal $UNSEAL_1
+        vault operator unseal $UNSEAL_2
+        vault operator unseal $UNSEAL_3
+
+
+        # vault token lookup | grep policies
+        
+        init_terraform
+        shift
+        ;;
+        login)
+        login
+        shift
+        ;;
+        cleanup)
+        cleanup
+        shift
+        ;;
+        *)
+        echo "cmd not found: try 'all', 'login', or 'cleanup'"
+        shift
+        ;;
+    esac
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#!/bin/bash
+set -e
+
+# you'll need to tell OSX security that you trust artifactory plugin binary
+pkill vault
+bash -c "vault server -dev -dev-root-token-id=root -dev-plugin-dir=./vault/plugins > /dev/null &"
+
+echo "sleepy time"
+sleep 10
+
+export VAULT_ROOT_TOKEN="root"
+vault login root
+
+# The path of the write needs to match the file name i.e.: sys/plugins/catalog/secret/thing needs to be the same checksum (as renamed above)
+vault write sys/plugins/catalog/secret/artifactory  \
+    sha_256=$(shasum -a 256  vault/plugins/artifactory | cut -d " " -f 1) \
+    command="artifactory"
+
+# https://jsok.github.io/vault-plugin-secrets-artifactory/usage
+
+vault secrets enable --plugin-name=artifactory -path=artifactory plugin
+
+# https://github.com/hashicorp/vault/blob/main/website/content/docs/enterprise/sentinel/examples.mdx

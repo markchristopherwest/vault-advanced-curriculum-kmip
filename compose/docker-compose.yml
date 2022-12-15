@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mongo:
+    build:
+      args:
+        - MONGO_PACKAGE=mongodb-enterprise
+        - MONGO_REPO=repo.mongodb.com 
+    ports:
+      - "27017:27017"
+      - "27018:27018"
+      - "8080:5696"    
+    image: "mongo:5.0"
+    depends_on:
+      - vault
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=foo
+      - MONGO_INITDB_ROOT_PASSWORD=bar
+  # mongosetup:
+  #   image: mongo:5.0
+  #   depends_on:
+  #     - mongo
+  #   restart: "no"
+  #   network_mode: "bridge"
+  #   entrypoint: [ "bash", "-c", "sleep 10 && mongo --host 127.0.0.1:mongo --enableEncryption --kmipServerName 127.0.0.1  --kmipPort 5696 --kmipServerCAFile ca.pem  --kmipClientCertificateFile client.pem"] 
+    
+  vault:
+    ports:
+      - "8200:8200"
+      - "8201:8202"
+      - "5696:5696"        
+    image: "hashicorp/vault-enterprise:latest"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      - 'VAULT_ADDR=http://127.0.0.1:8200'
+      - 'VAULT_DEV_ROOT_TOKEN_ID=root'
+      - 'VAULT_LICENSE_PATH=/opt/vault/lic/vault.hclic'
+      - 'VAULT_SKIP_VERIFY=true'
+    volumes:
+      - type: bind
+        source: ./vault.hcl
+        target: /opt/vault/config/vault.hcl
+      - type: bind
+        source: /tmp/vault.hclic
+        target: /opt/vault/lic/vault.hclic
+    entrypoint: [ "sh", "-c", "vault server -config /opt/vault/config/vault.hcl -log-level=trace"] 
+

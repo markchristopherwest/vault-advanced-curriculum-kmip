@@ -1,0 +1,80 @@
+# Ignore OSX type things
+**/.DS_Store
+**/.AppleDouble
+**/.LSOverride
+**/Icon
+**/._*
+**/.DocumentRevisions-V100
+**/.fseventsd
+**/.Spotlight-V100
+**/.TemporaryItems
+**/.Trashes
+**/.VolumeIcon.icns
+**/.com.apple.timemachine.donotpresent
+**/.AppleDB
+**/.AppleDesktop
+**/Network Trash Folder
+**/Temporary Items
+**/.apdisk
+**/*.plist
+
+
+# Ignore Archives, in case there is sensitive data
+**/*.tar.gz
+
+# Ignore Terraform tfvars, in case there is sensitive data
+**/*.tfvars
+
+# Ignore terraform directory, in case there is sensitive data
+**/.terraform
+
+# Ignore terraform lock file, in support for multiple architectures
+**/.terraform.lock.hcl
+
+# Ignore terraform state, in case there is sensitive data
+**/terraform.tfstate
+**/terraform.tfstate.backup
+
+# Ignore terraform lock files, in case there is an apply
+**/*.lck
+
+# Ignore terraform lock info, in case there is an apply in-flight
+**/*.lck.info
+
+# Ignore terraform backup, in case there is a blob file
+**/*.blob
+
+# Ignore licence files for TFE & Enterprise Keys
+**/.airgap
+**/*.lic
+**/*.hclic
+
+# Ignore certificates
+**/*.pem
+**/*.key
+**/*.crt
+**/*.csr
+
+**/tls
+
+# Ignore Vagrant
+**/.vagrant
+**/output*
+**/*.box
+
+# Ignore logs
+**/*.log
+
+# Ignore Modules that are Not Ready Yet
+/modules/terraform-azure*
+/modules/terraform-gcloud*
+
+/test/*
+
+<unknown>
+
+*.crt
+*.crl
+*.csr
+*.pem
+id-*
