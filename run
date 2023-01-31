@@ -2,7 +2,10 @@
 
 function cleanup() {
   pushd compose
+  docker-compose down --volumes
   docker-compose rm -fs 
+  docker system prune -f
+  docker volume prune -f
   popd
   # Purge the TF State
   rm -rf ./terraform/.terraform
@@ -59,11 +62,11 @@ do
         # vault login root
 
         echo "Initializing Vault"
-        vault operator init | tee /tmp/vault.txt
+        vault operator init | tee /tmp/vault.txt > /dev/null
         # sudo cat /tmp/vault.txt > /tmp/vault.txt
 
         echo "Sourcing Vault"
-        export ROOT_TOKEN=$(cat /tmp/vault.txt | grep '^Initial' | awk '{print $4}')
+        export VAULT_TOKEN=$(cat /tmp/vault.txt | grep '^Initial' | awk '{print $4}')
         export UNSEAL_1=$(cat /tmp/vault.txt | grep '^Unseal Key 1' | awk '{print $4}')
         export UNSEAL_2=$(cat /tmp/vault.txt | grep '^Unseal Key 2' | awk '{print $4}')
         export UNSEAL_3=$(cat /tmp/vault.txt | grep '^Unseal Key 3' | awk '{print $4}')

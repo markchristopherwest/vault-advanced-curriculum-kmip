@@ -7,12 +7,12 @@ services:
         - MONGO_PACKAGE=mongodb-enterprise
         - MONGO_REPO=repo.mongodb.com 
     ports:
+      - "5697:5697"
       - "27017:27017"
       - "27018:27018"
-      - "8080:5696"    
     image: "mongo:5.0"
-    depends_on:
-      - vault
+    # depends_on:
+    #   - vault
     environment:
       - MONGO_INITDB_ROOT_USERNAME=foo
       - MONGO_INITDB_ROOT_PASSWORD=bar
@@ -22,7 +22,7 @@ services:
   #     - mongo
   #   restart: "no"
   #   network_mode: "bridge"
-  #   entrypoint: [ "bash", "-c", "sleep 10 && mongo --host 127.0.0.1:mongo --enableEncryption --kmipServerName 127.0.0.1  --kmipPort 5696 --kmipServerCAFile ca.pem  --kmipClientCertificateFile client.pem"] 
+  #   entrypoint: [ "bash", "-c", "sleep 10 && mongo --host 127.0.0.1:mongo --enableEncryption --kmipServerName 127.0.0.1  --kmipPort 5697 --kmipServerCAFile ca.pem  --kmipClientCertificateFile client.pem"] 
     
   vault:
     ports:
