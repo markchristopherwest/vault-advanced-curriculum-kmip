@@ -78,3 +78,6 @@
 *.csr
 *.pem
 id-*
+
+sensitive/*.json
+sensitive/*.txt

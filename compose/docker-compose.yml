@@ -7,28 +7,37 @@ services:
         - MONGO_PACKAGE=mongodb-enterprise
         - MONGO_REPO=repo.mongodb.com 
     ports:
-      - "5697:5697"
       - "27017:27017"
       - "27018:27018"
-    image: "mongo:5.0"
-    # depends_on:
-    #   - vault
+    image: "markchristopherwest/mongo-enterprise:5.0"
+    depends_on:
+      - vault
     environment:
       - MONGO_INITDB_ROOT_USERNAME=foo
       - MONGO_INITDB_ROOT_PASSWORD=bar
-  # mongosetup:
-  #   image: mongo:5.0
-  #   depends_on:
-  #     - mongo
-  #   restart: "no"
-  #   network_mode: "bridge"
-  #   entrypoint: [ "bash", "-c", "sleep 10 && mongo --host 127.0.0.1:mongo --enableEncryption --kmipServerName 127.0.0.1  --kmipPort 5697 --kmipServerCAFile ca.pem  --kmipClientCertificateFile client.pem"] 
+  mongosetup:
+    build:
+      args:
+        - MONGO_PACKAGE=mongodb-enterprise
+        - MONGO_REPO=repo.mongodb.com 
+    image: "markchristopherwest/mongo-enterprise:5.0"
+    depends_on:
+      - mongo
+      - vaultsetup
+    restart: "no"
+    network_mode: "bridge"
+    entrypoint: [ "bash", "-c", "sleep 10 && mongod --enableEncryption --kmipServerName host.docker.internal --kmipPort 5696  --kmipServerCAFile /sensitive/ca.pem --kmipClientCertificateFile /sensitive/client.pem"] 
+    volumes:
+      - type: bind
+        source: ./../sensitive
+        target: /sensitive
+    
     
   vault:
     ports:
+      - "5696:5696"
       - "8200:8200"
-      - "8201:8202"
-      - "5696:5696"        
+      - "8201:8201"
     image: "hashicorp/vault-enterprise:latest"
     cap_add:
       - IPC_LOCK
@@ -45,4 +54,20 @@ services:
         source: /tmp/vault.hclic
         target: /opt/vault/lic/vault.hclic
     entrypoint: [ "sh", "-c", "vault server -config /opt/vault/config/vault.hcl -log-level=trace"] 
+  vaultsetup:
+    expose:
+      - "8200"
+    image: "ubuntu:22.04"
+    depends_on:
+      - vault
+    # restart: "no"
+    network_mode: "bridge"
+    entrypoint: [ "sh", "-c", "/sensitive/helper.sh"] 
+    volumes:
+      - type: bind
+        source: ./../terraform
+        target: /terraform
+      - type: bind
+        source: ./../sensitive
+        target: /sensitive
 

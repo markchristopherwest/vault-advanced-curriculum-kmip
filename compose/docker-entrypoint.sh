@@ -186,10 +186,8 @@ _parse_config() {
 		# see https://docs.mongodb.com/manual/reference/configuration-options/
 		if grep -vEm1 '^[[:space:]]*(#|$)' "$configPath" | grep -qE '^[[:space:]]*[^=:]+[[:space:]]*='; then
 			# if the first non-comment/non-blank line of the config file looks like "foo = ...", this is probably the 2.4 and older "ini-style config format"
-			# https://docs.mongodb.com/v2.4/reference/configuration-options/
-			# https://docs.mongodb.com/v2.6/reference/configuration-options/
-			# https://github.com/mongodb/mongo/blob/r4.4.2/src/mongo/util/options_parser/options_parser.cpp#L1359-L1375
-			# https://stackoverflow.com/a/25518018/433558
+			# mongod tries to parse config as yaml and then falls back to ini-style parsing
+			# https://github.com/mongodb/mongo/blob/r6.0.3/src/mongo/util/options_parser/options_parser.cpp#L1883-L1894
 			echo >&2
 			echo >&2 "WARNING: it appears that '$configPath' is in the older INI-style format (replaced by YAML in MongoDB 2.6)"
 			echo >&2 '  This script does not parse the older INI-style format, and thus will ignore it.'
@@ -321,15 +319,8 @@ if [ "$originalArgOne" = 'mongod' ]; then
 		tlsMode='disabled'
 		if _mongod_hack_have_arg '--tlsCertificateKeyFile' "$@"; then
 			tlsMode='allowTLS'
-		elif _mongod_hack_have_arg '--sslPEMKeyFile' "$@"; then
-			tlsMode='allowSSL'
 		fi
-		# 4.2 switched all configuration/flag names from "SSL" to "TLS"
-		if [ "$tlsMode" = 'allowTLS' ] || mongod --help 2>&1 | grep -q -- ' --tlsMode '; then
-			_mongod_hack_ensure_arg_val --tlsMode "$tlsMode" "${mongodHackedArgs[@]}"
-		else
-			_mongod_hack_ensure_arg_val --sslMode "$tlsMode" "${mongodHackedArgs[@]}"
-		fi
+		_mongod_hack_ensure_arg_val --tlsMode "$tlsMode" "${mongodHackedArgs[@]}"
 
 		if stat "/proc/$$/fd/1" > /dev/null && [ -w "/proc/$$/fd/1" ]; then
 			# https://github.com/mongodb/mongo/blob/38c0eb538d0fd390c6cb9ce9ae9894153f6e8ef5/src/mongo/db/initialize_server_global_state.cpp#L237-L251
