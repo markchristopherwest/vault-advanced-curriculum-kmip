@@ -359,27 +359,3 @@ done
 
 
 
-
-#!/bin/bash
-set -e
-
-# you'll need to tell OSX security that you trust artifactory plugin binary
-pkill vault
-bash -c "vault server -dev -dev-root-token-id=root -dev-plugin-dir=./vault/plugins > /dev/null &"
-
-echo "sleepy time"
-sleep 10
-
-export VAULT_ROOT_TOKEN="root"
-vault login root
-
-# The path of the write needs to match the file name i.e.: sys/plugins/catalog/secret/thing needs to be the same checksum (as renamed above)
-vault write sys/plugins/catalog/secret/artifactory  \
-    sha_256=$(shasum -a 256  vault/plugins/artifactory | cut -d " " -f 1) \
-    command="artifactory"
-
-# https://jsok.github.io/vault-plugin-secrets-artifactory/usage
-
-vault secrets enable --plugin-name=artifactory -path=artifactory plugin
-
-# https://github.com/hashicorp/vault/blob/main/website/content/docs/enterprise/sentinel/examples.mdx
