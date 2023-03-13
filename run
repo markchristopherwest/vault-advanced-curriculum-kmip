@@ -67,27 +67,27 @@ do
         echo
         echo "# To verify your install:"
         echo
-        echo "docker exec -it tools-mongo-1 /usr/bin/mongosh --eval \"db.version()\""
+        echo "docker exec -it compose-mongo-1 /usr/bin/mongosh --eval \"db.version()\""
         echo 
         echo "# To verify your version:"
         echo
-        echo "docker exec -it tools-mongo-1 /usr/bin/mongosh --eval \"db.version()\" | grep \"Using Mongo\""
+        echo "docker exec -it compose-mongo-1 /usr/bin/mongosh --eval \"db.version()\" | grep \"Using Mongo\""
         echo 
         echo "# To verify your mongo init container logs:"
         echo
-        echo "docker logs tools-mongosetup-1"
+        echo "docker logs compose-mongosetup-1"
         echo 
         echo "# To verify your mongo service container logs:"
         echo
-        echo "docker logs tools-mongo-1"
+        echo "docker logs compose-mongo-1"
         echo 
         echo "# To verify your vault init container logs:"
         echo
-        echo "docker logs tools-vaultsetup-1"
+        echo "docker logs compose-vaultsetup-1"
         echo 
         echo "To verify your vault service container logs:"
         echo
-        echo "docker logs tools-vault-1"
+        echo "docker logs compose-vault-1"
 
 
         # echo "pausing for Vault init..."
@@ -137,8 +137,8 @@ do
         # echo ${vault_kmip_certificate} | tee client.pem
 
         # echo "Copying certs for mongo..."
-        # docker cp ./ca.pem tools-mongo-1:/ 
-        # docker cp ./client.pem tools-mongo-1:/ 
+        # docker cp ./ca.pem compose-mongo-1:/ 
+        # docker cp ./client.pem compose-mongo-1:/ 
 
 
         # # https://www.mongodb.com/docs/v4.0/tutorial/configure-encryption/#encrypt-using-an-existing-key
@@ -147,7 +147,7 @@ do
         # echo " \n" + "${syntax_mongo_start}"
 
         # echo " \n Here is the syntax you'll need to update mongo KMIP..."
-        # syntax_mongo_kmip="docker exec tools-mongo-1 mongod --enableEncryption --kmipServerName vault \
+        # syntax_mongo_kmip="docker exec compose-mongo-1 mongod --enableEncryption --kmipServerName vault \
         #               --kmipPort 5696 --kmipServerCAFile ca.pem \
         #               --kmipClientCertificateFile client.pem --kmipKeyIdentifier ${vault_kmip_serial_number}"
         # echo " \n" + "${syntax_mongo_kmip}"
@@ -184,14 +184,14 @@ do
         #       echo ${vault_kmip_certificate} | tee rotated_client.pem
 
         #       echo "Copying certs for mongo..."
-        #       docker cp ./rotated_ca.pem tools-mongo-1:/ 
-        #       docker cp ./rotated_client.pem tools-mongo-1:/ 
+        #       docker cp ./rotated_ca.pem compose-mongo-1:/ 
+        #       docker cp ./rotated_client.pem compose-mongo-1:/ 
 
 
 
 
         #       echo " \n Here is the syntax you'll need to rotate mongo KMIP..."
-        #       syntax_mongo_kmip_rotate="docker exec tools-mongo-1 mongod --enableEncryption --kmipRotateMasterKey \
+        #       syntax_mongo_kmip_rotate="docker exec compose-mongo-1 mongod --enableEncryption --kmipRotateMasterKey \
         #         --kmipServerName vault \
         #         --kmipServerCAFile rotated_ca.pem --kmipClientCertificateFile rotated_client.pem"
         #       echo " \n" + "${syntax_mongo_kmip_rotate}"
